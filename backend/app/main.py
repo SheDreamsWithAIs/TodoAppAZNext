@@ -4,6 +4,7 @@ import uvicorn
 from pymongo import MongoClient
 from dotenv import load_dotenv
 import os
+from app.routes import auth, tasks, labels
 
 # Load environment variables from .env file
 load_dotenv()
@@ -28,6 +29,12 @@ app.add_middleware(
 MONGO_URI = os.getenv("MONGO_URI")
 client = MongoClient(MONGO_URI)
 db = client.TodoAppAZNext  # Connect to the TodoAppAZNext database
+
+# Mount routers 🐉
+app.include_router(auth.router, prefix="/auth", tags=["auth"])
+app.include_router(tasks.router, prefix="/tasks", tags=["tasks"])
+app.include_router(labels.router, prefix="/labels", tags=["labels"])
+print("🐉 Routers mounted: /auth, /tasks, /labels")
 
 @app.get("/")
 async def hello_world():

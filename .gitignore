@@ -9,7 +9,10 @@ venv/
 .env.*
 !.env.example
 
-# OS/editor
+# OS/editor junk
 .DS_Store
 Thumbs.db
 .vscode/
+
+# Project files
+PROJECT_STATUS_FOR_AETHON.md
