@@ -27,3 +27,12 @@ These are the essential features that must be completed for a passing grade.
 -  Labels: can create/manage labels; name unique per user case-insensitively; can assign multiple labels to a task.
 - Persistence & scope: data stored in MongoDB and scoped to the logged-in user.
 - Readiness: /health returns 200 when API up.
+
+### Auth:
+- Auth: can sign up, log in (httpOnly cookie), log out, and GET /auth/me returns current user.
+- Signup success: given new email, returns 201 + sets cookie + me works
+- Signup duplicate: same email → 409 (or 400) with friendly message
+- Login success: valid creds → 200 + sets cookie + me works
+- Login fail: bad creds → 401, no cookie
+- Logout: clears cookie; subsequent me → 401
+- Me unauth: no cookie → 401
