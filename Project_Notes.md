@@ -1,6 +1,7 @@
 # Project Notes
 
 ## Context
+This task tracking (to do) app is a being put together for a course on AI assisted development. It is meant to exposes us to several technologies including Cursor. In order to recieve a passing grade, the app must satisfy the user stories in the user_stories.md file. These are our acceptance criteral.
 
 ## 2) Documents (MongoDB)
 
@@ -42,3 +43,8 @@
   
   name: what the user typed (“Work”)
   name_normalized: normalized (trim + lower/casefold → “work”)
+
+### Indexes to add when we get that far
+- users: email unique.
+- labels: compound unique (user_id, name_key); index user_id.
+- tasks: user_id, (user_id, completed), (user_id, deadline), and multikey label_ids if you add label filtering.

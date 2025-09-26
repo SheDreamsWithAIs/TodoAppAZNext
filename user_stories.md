@@ -18,3 +18,12 @@ These are the essential features that must be completed for a passing grade.
     * **As a user, I want to assign one or more labels to a task**, so I can easily filter and organize my tasks.
 * **Data Persistence**
     * The application must **persist all user, task, and label data in a MongoDB database**.
+
+
+## More explicit Aceptance Criteria:
+
+- Auth: can sign up, log in (httpOnly cookie), log out, and GET /auth/me returns current user.
+- Tasks: can create/view/update/delete my own tasks; title required; priority + deadline present; completed toggles.
+-  Labels: can create/manage labels; name unique per user case-insensitively; can assign multiple labels to a task.
+- Persistence & scope: data stored in MongoDB and scoped to the logged-in user.
+- Readiness: /health returns 200 when API up.
