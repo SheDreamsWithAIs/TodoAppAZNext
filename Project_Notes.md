@@ -48,3 +48,8 @@ This task tracking (to do) app is a being put together for a course on AI assist
 - users: email unique.
 - labels: compound unique (user_id, name_key); index user_id.
 - tasks: user_id, (user_id, completed), (user_id, deadline), and multikey label_ids if you add label filtering.
+
+
+## Other notes
+
+Verify powershell syntax BEFORE running powershell commands to reduce time spent on revising commands.

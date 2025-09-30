@@ -4,7 +4,9 @@ import uvicorn
 from pymongo import MongoClient
 from dotenv import load_dotenv
 import os
-from app.routes import auth, tasks, labels
+
+# 👇 absolute import: we run from 'backend', and 'app' is a package
+from app.routes import tasks, auth, labels  # (auth/labels can exist as stubs)
 
 # Load environment variables from .env file
 load_dotenv()
@@ -64,5 +66,3 @@ async def test_database_connection():
             "message": f"Database connection failed: {str(e)}"
         }
 
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
