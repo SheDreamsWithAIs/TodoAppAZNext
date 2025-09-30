@@ -9,7 +9,37 @@ import os
 from app.routes import tasks, auth, labels  # (auth/labels can exist as stubs)
 
 # Load environment variables from .env file
-load_dotenv()
+from dotenv import dotenv_values  # More direct way to read .env
+import pathlib
+
+# Get absolute path to backend directory
+current_dir = pathlib.Path(__file__).parent.parent.absolute()
+env_path = current_dir / '.env'
+
+print(f"🐉 Current directory: {current_dir}")
+print(f"🐉 Looking for .env file at: {env_path}")
+print(f"🐉 .env file exists: {env_path.exists()}")
+
+if env_path.exists():
+    try:
+        # Try to read .env file directly
+        config = dotenv_values(env_path)
+        print("🐉 Direct .env file contents (sanitized):")
+        for key in config:
+            print(f"🐉   Found key: {key}")
+        
+        if 'MONGO_URI' in config:
+            os.environ['MONGO_URI'] = config['MONGO_URI']
+            print("🐉 Successfully set MONGO_URI in environment")
+        else:
+            print("🐉 MONGO_URI not found in .env file!")
+            
+    except Exception as e:
+        print(f"🐉 Error reading .env file: {str(e)}")
+
+# Double check if it's in environment
+mongo_uri = os.getenv('MONGO_URI')
+print(f"🐉 Final check - MONGO_URI in environment: {'Found' if mongo_uri else 'Not found'}")
 
 # Create the FastAPI app
 app = FastAPI(
