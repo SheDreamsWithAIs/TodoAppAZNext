@@ -5,7 +5,7 @@ from bson import ObjectId
 import os
 from pymongo import MongoClient
 
-from app.schemas.task import TaskCreate, TaskUpdate, TaskOut
+from app.schemas.task_schema import TaskCreate, TaskUpdate, TaskOut
 
 router = APIRouter(tags=["tasks"])
 

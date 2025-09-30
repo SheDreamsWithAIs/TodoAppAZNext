@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pymongo import MongoClient
 import os
-
+    
 # Create the FastAPI app
 app = FastAPI(
     title="TodoAppAZNext API",
@@ -29,9 +29,9 @@ client = MongoClient(MONGO_URI)
 db = client["TodoAppAZNext"]
 
 # Import and mount routers AFTER env + db are ready
-from app.routes import tasks, auth, labels  # noqa: E402
+from app.routes import tasks_routes, auth, labels  # Renamed tasks to tasks_routes  # noqa: E402
 
-app.include_router(tasks.router, prefix="/tasks", tags=["tasks"])
+app.include_router(tasks_routes.router, prefix="/tasks", tags=["tasks"])
 # app.include_router(auth.router,  prefix="/auth",  tags=["auth"])
 # app.include_router(labels.router,prefix="/labels",tags=["labels"])
 
