@@ -53,3 +53,50 @@ This task tracking (to do) app is a being put together for a course on AI assist
 ## Other notes
 
 Verify powershell syntax BEFORE running powershell commands to reduce time spent on revising commands.
+
+
+**Context:** `TodoAppAZNext` — run everything from `backend/` while working on FastAPI tasks.
+
+## Pre-flight Checklist(60s)
+
+* [ ] `cd C:\Dev\TodoAppAZNext\backend`
+* [ ] `.\.venv\Scripts\Activate.ps1`
+* [ ] `.env present` (backend or repo root) with `MONGO_URI=...`
+* [ ] `python -m uvicorn app.main:app --reload --port 8000`
+* [ ] Check `http://127.0.0.1:8000/health` → `{status: healthy}`
+
+## Known-good commands (paste, don’t think)
+
+```powershell
+cd C:\Dev\TodoAppAZNext\backend
+.\.venv\Scripts\Activate.ps1
+python -m uvicorn app.main:app --reload --port 8000
+```
+
+## Import/env guardrails
+
+* `main.py`: **first lines**
+
+  * `from dotenv import load_dotenv, find_dotenv`
+  * `load_dotenv(find_dotenv())`
+* Only then: create Mongo client, mount routers.
+* Routes never read env; they just use `tasks_collection = db["tasks"]`.
+
+## Swagger smoke (3 calls)
+
+1. **POST /tasks**
+
+   ```json
+   {"title":"Test","priority":"medium","deadline":"2025-10-01"}
+   ```
+2. **GET /tasks** → shows it
+3. **GET /tasks/{id}** → same doc
+
+## Git ritual (2 commands)
+
+```powershell
+git add .
+git commit -m "checkpoint: <what changed> (#ticket or lesson)"
+```
+
+(*If you need a branch:* `git switch -c feature/tasks-crud` then `git push -u origin feature/tasks-crud`.)
