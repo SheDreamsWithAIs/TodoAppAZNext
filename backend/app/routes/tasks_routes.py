@@ -71,3 +71,68 @@ async def get_task(task_id: str):
     if not doc:
         raise HTTPException(status_code=404, detail="Task not found")
     return serialize_task(doc)
+
+@router.patch("/{task_id}", response_model=TaskOut)
+async def update_task(task_id: str, task_update: TaskUpdate):
+    """Update a task with partial data (PATCH) 🐉"""
+    # Validate ObjectId format
+    if not ObjectId.is_valid(task_id):
+        raise HTTPException(status_code=400, detail="Invalid task ID format")
+    
+    # Check if task exists
+    existing_task = tasks_collection.find_one({"_id": ObjectId(task_id)})
+    if not existing_task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    # Build update document only with fields that were provided
+    update_doc = {}
+    
+    if task_update.title is not None:
+        update_doc["title"] = task_update.title
+    
+    if task_update.description is not None:
+        update_doc["description"] = task_update.description
+    
+    if task_update.priority is not None:
+        update_doc["priority"] = task_update.priority
+    
+    if task_update.deadline is not None:
+        # Convert date to datetime for MongoDB storage
+        update_doc["deadline"] = datetime.combine(task_update.deadline, datetime.min.time())
+    
+    if task_update.completed is not None:
+        update_doc["completed"] = task_update.completed
+    
+    if task_update.label_ids is not None:
+        update_doc["label_ids"] = task_update.label_ids
+    
+    # Always update the updated_at timestamp
+    update_doc["updated_at"] = datetime.now(UTC)
+    
+    # Perform the update
+    if update_doc:
+        tasks_collection.update_one(
+            {"_id": ObjectId(task_id)},
+            {"$set": update_doc}
+        )
+    
+    # Fetch and return the updated document
+    updated_doc = tasks_collection.find_one({"_id": ObjectId(task_id)})
+    return serialize_task(updated_doc)
+
+@router.delete("/{task_id}", status_code=204)
+async def delete_task(task_id: str):
+    """Delete a task 🐉"""
+    # Validate ObjectId format
+    if not ObjectId.is_valid(task_id):
+        raise HTTPException(status_code=400, detail="Invalid task ID format")
+    
+    # Try to delete the task
+    result = tasks_collection.delete_one({"_id": ObjectId(task_id)})
+    
+    # If no document was deleted, the task wasn't found
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    # Return 204 No Content on successful deletion
+    return None

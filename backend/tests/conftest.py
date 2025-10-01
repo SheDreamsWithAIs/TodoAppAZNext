@@ -29,7 +29,12 @@ def valid_task_data():
 
 @pytest.fixture
 def created_task(client, valid_task_data):
-    """Create a task and return its data"""
+    """Create a task and return its data, then clean it up after the test"""
     response = client.post("/tasks/", json=valid_task_data)
     assert response.status_code == 201
-    return response.json()
+    task = response.json()
+    
+    yield task  # Give the task to the test
+    
+    # Clean up: delete this specific task after the test finishes
+    client.delete(f"/tasks/{task['id']}")  # Delete the task we created
