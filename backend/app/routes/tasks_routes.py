@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from datetime import datetime
+from datetime import datetime, UTC  # Import UTC for timezone-aware timestamps
 from typing import List as TypeList
 from bson import ObjectId
 import os
@@ -40,7 +40,7 @@ def serialize_task(task_doc: dict) -> TaskOut:
 @router.post("/", response_model=TaskOut, status_code=201)
 async def create_task(task: TaskCreate):
     try:
-        now = datetime.utcnow()
+        now = datetime.now(UTC)  # Use timezone-aware UTC timestamp
         deadline_dt = datetime.combine(task.deadline, datetime.min.time())
         task_doc = {
             "title": task.title,
