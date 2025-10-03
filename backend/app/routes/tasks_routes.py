@@ -1,138 +1,70 @@
+"""
+Task routes using Beanie ODM 🐉
+Much cleaner than the previous PyMongo implementation!
+"""
 from fastapi import APIRouter, HTTPException
-from datetime import datetime, UTC  # Import UTC for timezone-aware timestamps
 from typing import List as TypeList
-from bson import ObjectId
-import os
-from pymongo import MongoClient
+from beanie import PydanticObjectId
 
-from app.schemas.task_schema import TaskCreate, TaskUpdate, TaskOut
+from app.models.task import Task, TaskCreateRequest, TaskUpdateRequest
 
 router = APIRouter(tags=["tasks"])
 
-# --- Mongo connection (module-level) ---
-MONGO_URI = os.getenv("MONGO_URI")
-print(f"🐉 Tasks router - MONGO_URI from environment: {'Found' if MONGO_URI else 'Not found'}")
-if not MONGO_URI:
-    print("🐉 Warning: MONGO_URI not found in environment variables!")
-    raise Exception("MONGO_URI environment variable is required but not found. Please check your .env file.")
-
-# DEFINE THE CLIENT/DB/COLLECTION 
-client = MongoClient(MONGO_URI)
-db = client["TodoAppAZNext"]
-tasks_collection = db["tasks"]
-# ---------------------------------------
-
-def serialize_task(task_doc: dict) -> TaskOut:
-    return TaskOut(
-        id=str(task_doc["_id"]),
-        title=task_doc["title"],
-        description=task_doc.get("description"),
-        priority=task_doc["priority"],
-        deadline=(task_doc["deadline"].date()
-                  if isinstance(task_doc["deadline"], datetime)
-                  else task_doc["deadline"]),
-        completed=task_doc["completed"],
-        label_ids=task_doc.get("label_ids", []),
-        created_at=task_doc["created_at"],
-        updated_at=task_doc["updated_at"],
-    )
-
-@router.post("/", response_model=TaskOut, status_code=201)
-async def create_task(task: TaskCreate):
+@router.post("/", response_model=Task, status_code=201)
+async def create_task(task_data: TaskCreateRequest):
+    """Create a new task 🐉"""
     try:
-        now = datetime.now(UTC)  # Use timezone-aware UTC timestamp
-        deadline_dt = datetime.combine(task.deadline, datetime.min.time())
-        task_doc = {
-            "title": task.title,
-            "description": task.description,
-            "priority": task.priority,
-            "deadline": deadline_dt,
-            "completed": False,
-            "label_ids": [],
-            "created_at": now,
-            "updated_at": now,
-        }
-        result = tasks_collection.insert_one(task_doc)
-        task_doc["_id"] = result.inserted_id
-        return serialize_task(task_doc)
+        # Create a new Task document directly from the request data
+        task = Task(**task_data.model_dump())
+        
+        # Save to database (Beanie handles all the MongoDB operations)
+        await task.create()
+        
+        return task
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to create task: {e}")
 
-@router.get("/", response_model=TypeList[TaskOut])
+@router.get("/", response_model=TypeList[Task])
 async def list_tasks(limit: int = 50):
-    cursor = tasks_collection.find().sort("created_at", -1).limit(limit)
-    return [serialize_task(doc) for doc in cursor]
+    """List all tasks 🐉"""
+    # Beanie makes queries super clean!
+    tasks = await Task.find_all().sort(-Task.created_at).limit(limit).to_list()
+    return tasks
 
-@router.get("/{task_id}", response_model=TaskOut)
-async def get_task(task_id: str):
-    if not ObjectId.is_valid(task_id):
-        raise HTTPException(status_code=400, detail="Invalid task ID format")
-    doc = tasks_collection.find_one({"_id": ObjectId(task_id)})
-    if not doc:
+@router.get("/{task_id}", response_model=Task)
+async def get_task(task_id: PydanticObjectId):
+    """Get a specific task by ID 🐉"""
+    task = await Task.get(task_id)
+    if not task:
         raise HTTPException(status_code=404, detail="Task not found")
-    return serialize_task(doc)
+    return task
 
-@router.patch("/{task_id}", response_model=TaskOut)
-async def update_task(task_id: str, task_update: TaskUpdate):
+@router.patch("/{task_id}", response_model=Task)
+async def update_task(task_id: PydanticObjectId, task_update: TaskUpdateRequest):
     """Update a task with partial data (PATCH) 🐉"""
-    # Validate ObjectId format
-    if not ObjectId.is_valid(task_id):
-        raise HTTPException(status_code=400, detail="Invalid task ID format")
-    
-    # Check if task exists
-    existing_task = tasks_collection.find_one({"_id": ObjectId(task_id)})
-    if not existing_task:
+    # Find the existing task
+    task = await Task.get(task_id)
+    if not task:
         raise HTTPException(status_code=404, detail="Task not found")
     
-    # Build update document only with fields that were provided
-    update_doc = {}
+    # Get only the fields that were provided (exclude None values)
+    update_data = task_update.model_dump(exclude_unset=True)
     
-    if task_update.title is not None:
-        update_doc["title"] = task_update.title
+    # Update the task with new data
+    await task.update({"$set": update_data})
     
-    if task_update.description is not None:
-        update_doc["description"] = task_update.description
-    
-    if task_update.priority is not None:
-        update_doc["priority"] = task_update.priority
-    
-    if task_update.deadline is not None:
-        # Convert date to datetime for MongoDB storage
-        update_doc["deadline"] = datetime.combine(task_update.deadline, datetime.min.time())
-    
-    if task_update.completed is not None:
-        update_doc["completed"] = task_update.completed
-    
-    if task_update.label_ids is not None:
-        update_doc["label_ids"] = task_update.label_ids
-    
-    # Always update the updated_at timestamp
-    update_doc["updated_at"] = datetime.now(UTC)
-    
-    # Perform the update
-    if update_doc:
-        tasks_collection.update_one(
-            {"_id": ObjectId(task_id)},
-            {"$set": update_doc}
-        )
-    
-    # Fetch and return the updated document
-    updated_doc = tasks_collection.find_one({"_id": ObjectId(task_id)})
-    return serialize_task(updated_doc)
+    # Return the updated task (Beanie automatically refreshes it)
+    return await Task.get(task_id)
 
 @router.delete("/{task_id}", status_code=204)
-async def delete_task(task_id: str):
+async def delete_task(task_id: PydanticObjectId):
     """Delete a task 🐉"""
-    # Validate ObjectId format
-    if not ObjectId.is_valid(task_id):
-        raise HTTPException(status_code=400, detail="Invalid task ID format")
-    
-    # Try to delete the task
-    result = tasks_collection.delete_one({"_id": ObjectId(task_id)})
-    
-    # If no document was deleted, the task wasn't found
-    if result.deleted_count == 0:
+    task = await Task.get(task_id)
+    if not task:
         raise HTTPException(status_code=404, detail="Task not found")
+    
+    # Delete the task
+    await task.delete()
     
     # Return 204 No Content on successful deletion
     return None

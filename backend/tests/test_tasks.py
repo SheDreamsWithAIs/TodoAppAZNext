@@ -18,12 +18,12 @@ def test_create_task(client, valid_task_data):
     # Check default values
     assert data["completed"] is False
     assert data["label_ids"] == []
-    assert "id" in data
+    assert "_id" in data  # Beanie uses _id, not id
     assert "created_at" in data
     assert "updated_at" in data
     
     # Clean up the task we created
-    client.delete(f"/tasks/{data['id']}")
+    client.delete(f"/tasks/{data['_id']}")
 
 def test_list_tasks(client, created_task):
     """Test listing tasks"""
@@ -37,17 +37,17 @@ def test_list_tasks(client, created_task):
     
     # First task should match our created task
     first_task = data[0]
-    assert first_task["id"] == created_task["id"]
+    assert first_task["_id"] == created_task["_id"]
     assert first_task["title"] == created_task["title"]
 
 def test_get_task(client, created_task):
     """Test getting a specific task"""
-    response = client.get(f"/tasks/{created_task['id']}")
+    response = client.get(f"/tasks/{created_task['_id']}")
     assert response.status_code == 200
     data = response.json()
     
     # Should match our created task
-    assert data["id"] == created_task["id"]
+    assert data["_id"] == created_task["_id"]
     assert data["title"] == created_task["title"]
     assert data["description"] == created_task["description"]
     assert data["priority"] == created_task["priority"]
@@ -62,7 +62,7 @@ def test_get_task_not_found(client):
 def test_get_task_invalid_id(client):
     """Test getting a task with invalid ID format"""
     response = client.get("/tasks/invalid-id")
-    assert response.status_code == 400
+    assert response.status_code == 422  # Pydantic validation error
 
 def test_update_task(client, created_task):
     """Test updating a task with PATCH"""
@@ -71,7 +71,7 @@ def test_update_task(client, created_task):
         "completed": True
     }
     
-    response = client.patch(f"/tasks/{created_task['id']}", json=update_data)
+    response = client.patch(f"/tasks/{created_task['_id']}", json=update_data)
     assert response.status_code == 200
     data = response.json()
     
@@ -90,7 +90,7 @@ def test_update_task_partial(client, created_task):
         "priority": "high"
     }
     
-    response = client.patch(f"/tasks/{created_task['id']}", json=update_data)
+    response = client.patch(f"/tasks/{created_task['_id']}", json=update_data)
     assert response.status_code == 200
     data = response.json()
     
@@ -109,15 +109,15 @@ def test_update_task_invalid_id(client):
     """Test updating with invalid ID format"""
     update_data = {"title": "New Title"}
     response = client.patch("/tasks/invalid-id", json=update_data)
-    assert response.status_code == 400
+    assert response.status_code == 422  # Pydantic validation error
 
 def test_delete_task(client, created_task):
     """Test deleting a task"""
-    response = client.delete(f"/tasks/{created_task['id']}")
+    response = client.delete(f"/tasks/{created_task['_id']}")
     assert response.status_code == 204
     
     # Verify the task is actually deleted
-    get_response = client.get(f"/tasks/{created_task['id']}")
+    get_response = client.get(f"/tasks/{created_task['_id']}")
     assert get_response.status_code == 404
 
 def test_delete_task_not_found(client):
@@ -128,4 +128,4 @@ def test_delete_task_not_found(client):
 def test_delete_task_invalid_id(client):
     """Test deleting with invalid ID format"""
     response = client.delete("/tasks/invalid-id")
-    assert response.status_code == 400
+    assert response.status_code == 422  # Pydantic validation error
