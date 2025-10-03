@@ -4,6 +4,7 @@ uvicorn[standard]==0.24.0
 python-multipart==0.0.6
 pymongo==4.6.0
 python-dotenv==1.0.0
+email-validator==2.1.0  # Required for EmailStr in Pydantic
 
 # Testing dependencies
 pytest==7.4.3
