@@ -2,20 +2,26 @@
 
 ## Quick Start
 
-### 1. Activate Virtual Environment
-```bash
-..\venv\Scripts\Activate.ps1
+### Prerequisites
+- Ensure you have a `.env` file in the backend directory (`C:\Dev\TodoAppAZNext\backend\.env`) with your MongoDB connection string:
+  ```
+  MONGO_URI=mongodb+srv://your-connection-string
+  APP_ENV=dev
+  ```
+
+### Running the Server
+```powershell
+# Navigate to project root
+cd C:\Dev\TodoAppAZNext
+
+# Set Python path and run server
+$env:PYTHONPATH = "C:\Dev\TodoAppAZNext\backend"; python -m uvicorn app.main:app --reload --port 8000
 ```
 
-### 2. Run Server
-```bash
-python backend/app/main.py
-```
-
-### 3. Test Health
-```bash
-curl http://localhost:8000/health
-```
+### Verify Server is Running
+- Check console output for: `Connected to DB: TodoAppAZNext_dev (env=dev)`
+- Test health endpoint: `http://localhost:8000/health`
+- Test database: `http://localhost:8000/db-test`
 
 ## API Endpoints
 - `/` - Hello World

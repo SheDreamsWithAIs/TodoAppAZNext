@@ -10,8 +10,12 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import init_beanie
 import os
 
+# Force test environment 🐉
+os.environ["APP_ENV"] = "test"
+
 from app.main import app
 from app.models.task import Task
+from app.models.user import User
 
 # Configure pytest-asyncio
 pytest_plugins = ('pytest_asyncio',)
@@ -32,17 +36,23 @@ async def init_test_db():
     if not MONGO_URI:
         pytest.fail("MONGO_URI not set. Required for tests.")
     
+    # Get test database name from environment
+    TEST_DB_NAME = os.getenv("MONGO_DB_NAME_TEST", "TodoAppAZNext_test")
+    
     # Create test database connection
     client = AsyncIOMotorClient(MONGO_URI)
-    database = client["TodoAppAZNext_test"]  # Use separate test database
+    database = client[TEST_DB_NAME]
     
-    # Initialize Beanie with our Task model
-    await init_beanie(database=database, document_models=[Task])
+    # Initialize Beanie with our document models
+    await init_beanie(database=database, document_models=[Task, User])
+    
+    print(f"Test database initialized: {TEST_DB_NAME}")
     
     yield  # Run tests
     
     # Cleanup: Drop the test database after all tests
-    await client.drop_database("TodoAppAZNext_test")
+    print(f"Cleaning up test database: {TEST_DB_NAME}")
+    await client.drop_database(TEST_DB_NAME)
     client.close()
 
 # Test client fixture

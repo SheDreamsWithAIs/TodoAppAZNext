@@ -7,6 +7,8 @@ python-dotenv==1.0.0
 email-validator==2.1.0  # Required for EmailStr in Pydantic
 beanie==1.26.0  # MongoDB ODM with Pydantic integration
 motor==3.3.2  # Async MongoDB driver
+passlib==1.7.4  # Password hashing
+bcrypt==4.0.1  # Bcrypt backend for passlib
 
 # Testing dependencies
 pytest==7.4.3
