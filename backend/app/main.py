@@ -85,11 +85,14 @@ async def init_database():
 # Startup is now handled by lifespan context manager above
 
 # Import and mount routers AFTER env + db are ready
-from .routes import tasks_routes, auth, labels  # Renamed tasks to tasks_routes  # noqa: E402
+from .routes.tasks_routes import router as tasks_router  # noqa: E402
+from .routes.auth import router as auth_router  # noqa: E402
+# from .routes.labels import router as labels_router  # noqa: E402
 
-app.include_router(tasks_routes.router, prefix="/tasks", tags=["tasks"])
-app.include_router(auth.router, prefix="/auth")
-# app.include_router(labels.router,prefix="/labels",tags=["labels"])
+app.include_router(tasks_router, prefix="/tasks", tags=["tasks"])
+app.include_router(auth_router, prefix="/auth", tags=["auth"])
+# app.include_router(labels_router, prefix="/labels", tags=["labels"])
+
 
 @app.get("/health")
 async def health_check():

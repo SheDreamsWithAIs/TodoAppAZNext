@@ -91,13 +91,3 @@ async def login(login_data: LoginIn):
         email=user.email,
         created_at=user.created_at
     )
-
-@router.get("/test")
-async def test_endpoint():
-    """Test endpoint to verify router is working 🐉"""
-    return {"message": "Auth router is working!"}
-
-@router.post("/simple-login")
-async def simple_login():
-    """Minimal login test endpoint 🐉"""
-    return {"message": "Simple login endpoint works!"}
