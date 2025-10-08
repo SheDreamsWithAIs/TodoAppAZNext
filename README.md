@@ -5,9 +5,9 @@ Project structure
 How to get the app up and running
 
 * [ ] `cd C:\Dev\TodoAppAZNext\backend`
-* [ ] `.\.venv\Scripts\Activate.ps1`
+* [ ] `..\.venv\Scripts\Activate.ps1`
 * [ ] `.env present` (backend or repo root) with `MONGO_URI=...`
-* [ ] `python -m uvicorn app.main:app --reload --port 8000`
+* [ ] `C:\Python313\python.exe -m uvicorn app.main:app --reload --port 8000`
 * [ ] Check `http://127.0.0.1:8000/health` → `{status: healthy}`
 
 Here be dragons 
