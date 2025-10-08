@@ -9,6 +9,9 @@ import { User, LogOut, Plus } from "lucide-react";
 import { Sidebar, type TaskFilter } from "@/components/layout/Sidebar";
 import { TaskList } from "@/components/tasks/TaskList";
 import { TaskForm } from "@/components/tasks/TaskForm";
+import { TaskEditModal } from "@/components/tasks/TaskEditModal";
+import { DeleteConfirmModal } from "@/components/tasks/DeleteConfirmModal";
+import { LabelsManagerModal } from "@/components/labels/LabelsManagerModal";
 import type { Task, Label } from "@/types";
 
 export default function DashboardPage() {
@@ -17,7 +20,7 @@ export default function DashboardPage() {
   const { user, logout } = useAuth();
 
   // Mock data in memory for UI verification
-  const [labels] = useState<Label[]>([
+  const [labels, setLabels] = useState<Label[]>([
     { id: "l1", user_id: "dev", name: "Work", name_normalized: "work", color: "#f97316" },
     { id: "l2", user_id: "dev", name: "Personal", name_normalized: "personal", color: "#ec4899" },
     { id: "l3", user_id: "dev", name: "Urgent", name_normalized: "urgent", color: "#dc2626" },
@@ -29,6 +32,9 @@ export default function DashboardPage() {
   ]);
   const [filter, setFilter] = useState<TaskFilter>("all");
   const [showNewTask, setShowNewTask] = useState<boolean>(false);
+  const [editTaskId, setEditTaskId] = useState<string | null>(null);
+  const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null);
+  const [showLabelsManager, setShowLabelsManager] = useState<boolean>(false);
 
   const filteredTasks = useMemo(() => {
     if (filter === "active") return tasks.filter(t => !t.completed);
@@ -53,6 +59,42 @@ export default function DashboardPage() {
     };
     setTasks(prev => [newTask, ...prev]);
     setShowNewTask(false);
+  };
+
+  const currentEditTask = useMemo(() => tasks.find(t => t.id === editTaskId) ?? null, [tasks, editTaskId]);
+
+  const saveTask = (id: string, data: { title: string; description?: string; priority: Task["priority"]; deadline: string; label_ids: string[] }) => {
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, ...data } : t));
+    setEditTaskId(null);
+  };
+
+  const askDeleteTask = (id: string) => setDeleteTaskId(id);
+  const confirmDelete = () => {
+    if (!deleteTaskId) return;
+    setTasks(prev => prev.filter(t => t.id !== deleteTaskId));
+    setDeleteTaskId(null);
+  };
+
+  // Labels CRUD (in-memory, case-insensitive uniqueness)
+  const createLabel = (name: string, color?: string) => {
+    const key = name.trim().toLowerCase();
+    if (!key) return;
+    if (labels.some(l => l.name_normalized === key)) return;
+    const id = `l${Math.random().toString(36).slice(2, 9)}`;
+    setLabels(prev => [...prev, { id, user_id: "dev", name, name_normalized: key, color }]);
+  };
+  const renameLabel = (id: string, newName: string) => {
+    const key = newName.trim().toLowerCase();
+    if (!key) return;
+    if (labels.some(l => l.id !== id && l.name_normalized === key)) return;
+    setLabels(prev => prev.map(l => l.id === id ? { ...l, name: newName, name_normalized: key } : l));
+  };
+  const recolorLabel = (id: string, color: string) => {
+    setLabels(prev => prev.map(l => l.id === id ? { ...l, color } : l));
+  };
+  const deleteLabel = (id: string) => {
+    setLabels(prev => prev.filter(l => l.id !== id));
+    setTasks(prev => prev.map(t => ({ ...t, label_ids: t.label_ids.filter(lid => lid !== id) })));
   };
 
   return (
@@ -94,7 +136,7 @@ export default function DashboardPage() {
         <main className="max-w-6xl mx-auto px-4 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <div className="lg:col-span-1">
-              <Sidebar tasks={tasks} labels={labels} filter={filter} onChangeFilter={setFilter} />
+              <Sidebar tasks={tasks} labels={labels} filter={filter} onChangeFilter={setFilter} onNewLabel={() => setShowLabelsManager(true)} />
             </div>
             <div className="lg:col-span-3">
               <div className="mb-6">
@@ -105,10 +147,40 @@ export default function DashboardPage() {
               {showNewTask && (
                 <TaskForm labels={labels} onSubmit={createTask} onCancel={() => setShowNewTask(false)} />
               )}
-              <TaskList tasks={filteredTasks} labels={labels} onToggleComplete={toggleComplete} />
+              <TaskList
+                tasks={filteredTasks}
+                labels={labels}
+                onToggleComplete={toggleComplete}
+                onEdit={(id) => setEditTaskId(id)}
+                onDelete={askDeleteTask}
+              />
             </div>
           </div>
         </main>
+
+        <TaskEditModal
+          open={!!editTaskId}
+          onClose={() => setEditTaskId(null)}
+          labels={labels}
+          task={currentEditTask}
+          onSave={saveTask}
+        />
+
+        <DeleteConfirmModal
+          open={!!deleteTaskId}
+          onCancel={() => setDeleteTaskId(null)}
+          onConfirm={confirmDelete}
+        />
+
+        <LabelsManagerModal
+          open={showLabelsManager}
+          onClose={() => setShowLabelsManager(false)}
+          labels={labels}
+          onCreate={createLabel}
+          onRename={renameLabel}
+          onRecolor={recolorLabel}
+          onDelete={deleteLabel}
+        />
       </div>
     </div>
   );

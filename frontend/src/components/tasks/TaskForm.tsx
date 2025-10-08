@@ -10,9 +10,11 @@ interface TaskFormProps {
   defaultValues?: Partial<TaskFormData>;
   onSubmit: (data: TaskFormData) => void;
   onCancel: () => void;
+  heading?: string;
+  submitLabel?: string;
 }
 
-export function TaskForm({ labels, defaultValues, onSubmit, onCancel }: TaskFormProps) {
+export function TaskForm({ labels, defaultValues, onSubmit, onCancel, heading = "Create New Task", submitLabel = "Create Task" }: TaskFormProps) {
   const { theme } = useTheme();
   const darkMode = theme === "dark";
 
@@ -39,7 +41,7 @@ export function TaskForm({ labels, defaultValues, onSubmit, onCancel }: TaskForm
           <div className={`${darkMode ? "bg-amber-800/50" : "bg-orange-100"} w-10 h-10 rounded-lg flex items-center justify-center`}>
             <Plus className={`${darkMode ? "text-amber-300" : "text-orange-600"} w-6 h-6`} />
           </div>
-          <h3 className={`${darkMode ? "text-amber-200" : "text-gray-900"} text-xl font-bold`}>Create New Task</h3>
+          <h3 className={`${darkMode ? "text-amber-200" : "text-gray-900"} text-xl font-bold`}>{heading}</h3>
         </div>
         <button onClick={onCancel}>
           <X className={`${darkMode ? "text-amber-400 hover:text-amber-300" : "text-gray-400 hover:text-gray-600"} w-6 h-6`} />
@@ -83,7 +85,7 @@ export function TaskForm({ labels, defaultValues, onSubmit, onCancel }: TaskForm
           </div>
         </div>
         <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-amber-900/30">
-          <button type="submit" className={`${darkMode ? "bg-gradient-to-r from-amber-700 to-orange-800 hover:from-amber-600 hover:to-orange-700 text-amber-50" : "bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white"} flex-1 px-6 py-3 rounded-lg transition font-semibold text-base shadow-md hover:shadow-lg`}>Create Task</button>
+          <button type="submit" className={`${darkMode ? "bg-gradient-to-r from-amber-700 to-orange-800 hover:from-amber-600 hover:to-orange-700 text-amber-50" : "bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white"} flex-1 px-6 py-3 rounded-lg transition font-semibold text-base shadow-md hover:shadow-lg`}>{submitLabel}</button>
           <button type="button" onClick={onCancel} className={`${darkMode ? "border-amber-700 text-amber-300 hover:bg-amber-900/30" : "border-orange-300 text-gray-700 hover:bg-orange-50"} px-6 py-3 rounded-lg transition font-medium border-2`}>Cancel</button>
         </div>
       </form>
