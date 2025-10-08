@@ -35,10 +35,9 @@ export function LabelsManagerModal({ open, onClose, labels, onCreate, onRename, 
 
   const normalizedSet = useMemo(() => new Set(labels.map(l => l.name_normalized)), [labels]);
 
-  const canCreate = () => {
-    const key = normalize(newName);
-    return key.length > 0 && !normalizedSet.has(key);
-  };
+  const newKey = normalize(newName);
+  const isDuplicate = newKey.length > 0 && normalizedSet.has(newKey);
+  const canCreate = () => newKey.length > 0 && !isDuplicate;
 
   function normalize(name: string) {
     return name.trim().toLowerCase();
@@ -140,6 +139,11 @@ export function LabelsManagerModal({ open, onClose, labels, onCreate, onRename, 
             Add
           </button>
         </div>
+        {isDuplicate && (
+          <p className={`${darkMode ? "text-red-300" : "text-red-600"} text-xs mt-2`} aria-live="polite">
+            A label named “{newName}” already exists (names are case‑insensitive).
+          </p>
+        )}
       </div>
       <ConfirmModal
         open={!!pendingDelete}

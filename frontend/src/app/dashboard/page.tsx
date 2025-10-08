@@ -13,6 +13,7 @@ import { TaskEditModal } from "@/components/tasks/TaskEditModal";
 import { DeleteConfirmModal } from "@/components/tasks/DeleteConfirmModal";
 import { LabelsManagerModal } from "@/components/labels/LabelsManagerModal";
 import { SkeletonTaskRow } from "@/components/ui/Skeleton";
+import { useToast } from "@/components/ui/Toast";
 import type { Task, Label } from "@/types";
 import { apiListTasks, apiCreateTask, apiUpdateTask, apiDeleteTask, apiListLabels, apiCreateLabel, apiUpdateLabel, apiDeleteLabel } from "@/lib/api";
 
@@ -20,6 +21,7 @@ export default function DashboardPage() {
   const { theme } = useTheme();
   const darkMode = theme === "dark";
   const { user, logout } = useAuth();
+  const { show } = useToast();
 
   // Labels loaded from API
   const [labels, setLabels] = useState<Label[]>([]);
@@ -47,6 +49,7 @@ export default function DashboardPage() {
       await apiUpdateTask(id, { completed: updated?.completed });
     } catch (e) {
       setTasks(original);
+      show("Failed to update task");
     }
   };
 
@@ -55,8 +58,11 @@ export default function DashboardPage() {
       const created = await apiCreateTask(data);
       setTasks(prev => [created, ...prev]);
       setShowNewTask(false);
+      show("Task created", "success");
     } catch (e: any) {
-      setError(e?.message || "Failed to create task");
+      const msg = e?.message || "Failed to create task";
+      setError(msg);
+      show(msg);
     }
   };
 
@@ -71,6 +77,7 @@ export default function DashboardPage() {
     } catch (e) {
       setTasks(original);
       setError("Failed to save changes");
+      show("Failed to save changes");
     }
   };
 
@@ -86,6 +93,7 @@ export default function DashboardPage() {
     } catch (e) {
       setTasks(original);
       setError("Failed to delete task");
+      show("Failed to delete task");
     }
   };
 
@@ -102,7 +110,11 @@ export default function DashboardPage() {
         setTasks(tasksRes);
         setLabels(labelsRes);
       } catch (e: any) {
-        if (active) setError(e?.message || "Failed to load data");
+        if (active) {
+          const msg = e?.message || "Failed to load data";
+          setError(msg);
+          show(msg);
+        }
       } finally {
         if (active) setLoading(false);
       }
@@ -116,7 +128,9 @@ export default function DashboardPage() {
       const created = await apiCreateLabel(name, color);
       setLabels(prev => [...prev, created]);
     } catch (e: any) {
-      setError(e?.message || "Failed to create label");
+      const msg = e?.message || "Failed to create label";
+      setError(msg);
+      show(msg);
     }
   };
   const renameLabel = async (id: string, newName: string) => {
@@ -128,6 +142,7 @@ export default function DashboardPage() {
     } catch (e) {
       setLabels(original);
       setError("Failed to rename label");
+      show("Failed to rename label");
     }
   };
   const recolorLabel = async (id: string, color: string) => {
@@ -138,6 +153,7 @@ export default function DashboardPage() {
     } catch (e) {
       setLabels(original);
       setError("Failed to update label color");
+      show("Failed to update label color");
     }
   };
   const deleteLabel = async (id: string) => {
@@ -151,6 +167,7 @@ export default function DashboardPage() {
       setLabels(originalLabels);
       setTasks(originalTasks);
       setError("Failed to delete label");
+      show("Failed to delete label");
     }
   };
 

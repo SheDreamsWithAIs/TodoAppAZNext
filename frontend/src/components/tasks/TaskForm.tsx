@@ -23,6 +23,7 @@ export function TaskForm({ labels, defaultValues, onSubmit, onCancel, heading = 
   const [priority, setPriority] = useState<TaskFormData["priority"]>(defaultValues?.priority ?? "medium");
   const [deadline, setDeadline] = useState(defaultValues?.deadline ?? "");
   const [labelIds, setLabelIds] = useState<string[]>(defaultValues?.label_ids ?? []);
+  const [errors, setErrors] = useState<{ title?: string; deadline?: string }>({});
 
   const toggleLabel = (id: string) => {
     setLabelIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
@@ -30,7 +31,11 @@ export function TaskForm({ labels, defaultValues, onSubmit, onCancel, heading = 
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !deadline) return;
+    const nextErrors: { title?: string; deadline?: string } = {};
+    if (!title.trim()) nextErrors.title = "Title is required";
+    if (!deadline) nextErrors.deadline = "Deadline is required";
+    setErrors(nextErrors);
+    if (nextErrors.title || nextErrors.deadline) return;
     onSubmit({ title: title.trim(), description, priority, deadline, label_ids: labelIds });
   };
 
@@ -51,7 +56,16 @@ export function TaskForm({ labels, defaultValues, onSubmit, onCancel, heading = 
       <form onSubmit={submit} className="space-y-4">
         <div>
           <label className={`${darkMode ? "text-amber-200" : "text-gray-700"} block text-sm font-semibold mb-2`}>Task Title <span className="text-red-500">*</span></label>
-          <input value={title} onChange={e => setTitle(e.target.value)} placeholder="What needs to be done?" className={`${darkMode ? "bg-stone-800/50 border-amber-900/30 text-amber-100 placeholder-amber-500/50" : "bg-white border-orange-200 text-gray-900"} w-full px-4 py-3 rounded-lg border-2 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition`} />
+          <input
+            value={title}
+            onChange={e => { setTitle(e.target.value); if (errors.title) setErrors(prev => ({ ...prev, title: undefined })); }}
+            placeholder="What needs to be done?"
+            aria-invalid={!!errors.title}
+            className={`${darkMode ? "bg-stone-800/50 border-amber-900/30 text-amber-100 placeholder-amber-500/50" : "bg-white border-orange-200 text-gray-900"} w-full px-4 py-3 rounded-lg border-2 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition`}
+          />
+          {errors.title && (
+            <p className={`${darkMode ? "text-red-300" : "text-red-600"} text-xs mt-1`} role="alert">{errors.title}</p>
+          )}
         </div>
         <div>
           <label className={`${darkMode ? "text-amber-200" : "text-gray-700"} block text-sm font-semibold mb-2`}>Description</label>
@@ -68,7 +82,16 @@ export function TaskForm({ labels, defaultValues, onSubmit, onCancel, heading = 
           </div>
           <div>
             <label className={`${darkMode ? "text-amber-200" : "text-gray-700"} block text-sm font-semibold mb-2`}>Deadline <span className="text-red-500">*</span></label>
-            <input value={deadline} onChange={e => setDeadline(e.target.value)} type="date" className={`${darkMode ? "bg-stone-800/50 border-amber-800/50 text-amber-100" : "bg-white border-orange-300 text-gray-900 focus:border-orange-400"} w-full px-4 py-3 rounded-lg border-2 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition`} />
+            <input
+              value={deadline}
+              onChange={e => { setDeadline(e.target.value); if (errors.deadline) setErrors(prev => ({ ...prev, deadline: undefined })); }}
+              type="date"
+              aria-invalid={!!errors.deadline}
+              className={`${darkMode ? "bg-stone-800/50 border-amber-800/50 text-amber-100" : "bg-white border-orange-300 text-gray-900 focus:border-orange-400"} w-full px-4 py-3 rounded-lg border-2 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition`}
+            />
+            {errors.deadline && (
+              <p className={`${darkMode ? "text-red-300" : "text-red-600"} text-xs mt-1`} role="alert">{errors.deadline}</p>
+            )}
           </div>
         </div>
         <div>
