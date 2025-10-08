@@ -51,14 +51,23 @@ export function Sidebar({ tasks, labels, filter, onChangeFilter, onNewLabel }: S
             <Plus className="w-4 h-4" />
           </button>
         </div>
-        <div className="space-y-2">
-          {labels.map((label) => (
-            <div key={label.id} className={`${darkMode ? "hover:bg-stone-800/50" : "hover:bg-orange-50"} flex items-center gap-2 px-3 py-2 rounded-lg cursor-default`}>
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: label.color || "#f97316" }} />
-              <span className={`${darkMode ? "text-amber-200" : "text-gray-700"} text-sm`}>{label.name}</span>
-            </div>
-          ))}
-        </div>
+        {labels.length === 0 ? (
+          <div className={`${darkMode ? "bg-stone-900/60 border-amber-900/30" : "bg-white/80 border-orange-200/50"} border rounded-lg p-4 text-center`}>
+            <p className={`${darkMode ? "text-amber-300/80" : "text-gray-600"} text-sm mb-3`}>No labels yet. Create one to organize your tasks!</p>
+            <button onClick={onNewLabel} className={`${darkMode ? "bg-amber-800/60 text-amber-100 hover:bg-amber-800" : "bg-orange-100 text-orange-700 hover:bg-orange-200"} px-3 py-2 rounded text-sm`}>
+              Add Label
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {labels.map((label) => (
+              <div key={label.id} className={`${darkMode ? "hover:bg-stone-800/50" : "hover:bg-orange-50"} flex items-center gap-2 px-3 py-2 rounded-lg cursor-default`}>
+                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: label.color || "#f97316" }} />
+                <span className={`${darkMode ? "text-amber-200" : "text-gray-700"} text-sm`}>{label.name}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </aside>
   );

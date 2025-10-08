@@ -77,9 +77,10 @@ async def init_database():
     # Import document models
     from .models.task import Task
     from .models.user import User
+    from .models.label import Label
     
     # Initialize Beanie with our document models
-    await init_beanie(database=database, document_models=[Task, User])
+    await init_beanie(database=database, document_models=[Task, User, Label])
     print(f"Database initialized with Beanie ODM! Environment: {APP_ENV}, Database: {DB_NAME}")
 
 # Startup is now handled by lifespan context manager above
@@ -87,11 +88,11 @@ async def init_database():
 # Import and mount routers AFTER env + db are ready
 from .routes.tasks_routes import router as tasks_router  # noqa: E402
 from .routes.auth import router as auth_router  # noqa: E402
-# from .routes.labels import router as labels_router  # noqa: E402
+from .routes.labels_routes import router as labels_router  # noqa: E402
 
 app.include_router(tasks_router, prefix="/tasks", tags=["tasks"])
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
-# app.include_router(labels_router, prefix="/labels", tags=["labels"])
+app.include_router(labels_router, prefix="/labels", tags=["labels"])
 
 
 @app.get("/health")

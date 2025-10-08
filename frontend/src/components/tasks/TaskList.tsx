@@ -26,8 +26,8 @@ export function TaskList({ tasks, labels, onToggleComplete, onEdit, onDelete }: 
   }
   return (
     <div className="space-y-3">
-      {tasks.map(t => (
-        <TaskCard key={t.id} task={t} labels={labels} onToggleComplete={onToggleComplete} onEdit={onEdit} onDelete={onDelete} />
+      {tasks.map((t, idx) => (
+        <TaskCard key={t.id ?? `task-${idx}`} task={t} labels={labels} onToggleComplete={onToggleComplete} onEdit={onEdit} onDelete={onDelete} />
       ))}
     </div>
   );

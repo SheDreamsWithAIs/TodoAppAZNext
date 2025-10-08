@@ -39,7 +39,7 @@ export function TaskCard({ task, labels, onToggleComplete, onEdit, onDelete }: T
   return (
     <div className={`${darkMode ? "bg-stone-900/80 border-amber-900/30" : "bg-white/80 border-orange-200/50"} rounded-xl shadow-sm border p-5 hover:shadow-md transition ${task.completed ? "opacity-60" : ""}`}>
       <div className="flex items-start gap-4">
-        <button onClick={() => onToggleComplete(task.id)} className={`${task.completed
+        <button type="button" onClick={() => onToggleComplete(task.id)} className={`${task.completed
             ? darkMode ? "bg-amber-700 border-amber-700" : "bg-orange-500 border-orange-500"
             : darkMode ? "border-amber-700 hover:border-amber-500" : "border-orange-300 hover:border-orange-500"} mt-1 w-5 h-5 rounded border-2 flex items-center justify-center transition`}>
           {task.completed && <Check className="w-4 h-4 text-white" />}
@@ -78,10 +78,10 @@ export function TaskCard({ task, labels, onToggleComplete, onEdit, onDelete }: T
         </div>
 
         <div className="flex gap-2">
-          <button onClick={() => onEdit?.(task.id)} className={`${darkMode ? "text-amber-400 hover:text-amber-300 hover:bg-amber-900/50" : "text-gray-400 hover:text-orange-600 hover:bg-orange-50"} p-2 rounded-lg transition`}>
+          <button type="button" onClick={() => onEdit?.(task.id)} className={`${darkMode ? "text-amber-400 hover:text-amber-300 hover:bg-amber-900/50" : "text-gray-400 hover:text-orange-600 hover:bg-orange-50"} p-2 rounded-lg transition`}>
             <Edit2 className="w-4 h-4" />
           </button>
-          <button onClick={() => onDelete?.(task.id)} className={`${darkMode ? "text-amber-400 hover:text-red-400 hover:bg-red-900/30" : "text-gray-400 hover:text-red-600 hover:bg-red-50"} p-2 rounded-lg transition`}>
+          <button type="button" onClick={() => onDelete?.(task.id)} className={`${darkMode ? "text-amber-400 hover:text-red-400 hover:bg-red-900/30" : "text-gray-400 hover:text-red-600 hover:bg-red-50"} p-2 rounded-lg transition`}>
             <Trash2 className="w-4 h-4" />
           </button>
         </div>

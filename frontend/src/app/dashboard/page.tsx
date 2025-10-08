@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useTheme } from "@/contexts/theme-context";
@@ -12,24 +12,20 @@ import { TaskForm } from "@/components/tasks/TaskForm";
 import { TaskEditModal } from "@/components/tasks/TaskEditModal";
 import { DeleteConfirmModal } from "@/components/tasks/DeleteConfirmModal";
 import { LabelsManagerModal } from "@/components/labels/LabelsManagerModal";
+import { SkeletonTaskRow } from "@/components/ui/Skeleton";
 import type { Task, Label } from "@/types";
+import { apiListTasks, apiCreateTask, apiUpdateTask, apiDeleteTask, apiListLabels, apiCreateLabel, apiUpdateLabel, apiDeleteLabel } from "@/lib/api";
 
 export default function DashboardPage() {
   const { theme } = useTheme();
   const darkMode = theme === "dark";
   const { user, logout } = useAuth();
 
-  // Mock data in memory for UI verification
-  const [labels, setLabels] = useState<Label[]>([
-    { id: "l1", user_id: "dev", name: "Work", name_normalized: "work", color: "#f97316" },
-    { id: "l2", user_id: "dev", name: "Personal", name_normalized: "personal", color: "#ec4899" },
-    { id: "l3", user_id: "dev", name: "Urgent", name_normalized: "urgent", color: "#dc2626" },
-  ]);
-  const [tasks, setTasks] = useState<Task[]>([
-    { id: "t1", user_id: "dev", title: "Complete project documentation", description: "Write comprehensive docs for the API endpoints", priority: "high", deadline: "2025-10-15", completed: false, label_ids: ["l1","l3"] },
-    { id: "t2", user_id: "dev", title: "Review pull requests", description: "Check and merge pending PRs", priority: "medium", deadline: "2025-10-10", completed: false, label_ids: ["l1"] },
-    { id: "t3", user_id: "dev", title: "Grocery shopping", description: "Buy ingredients for dinner", priority: "low", deadline: "2025-10-08", completed: true, label_ids: ["l2"] },
-  ]);
+  // Labels loaded from API
+  const [labels, setLabels] = useState<Label[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<TaskFilter>("all");
   const [showNewTask, setShowNewTask] = useState<boolean>(false);
   const [editTaskId, setEditTaskId] = useState<string | null>(null);
@@ -42,59 +38,120 @@ export default function DashboardPage() {
     return tasks;
   }, [tasks, filter]);
 
-  const toggleComplete = (id: string) => {
-    setTasks(prev => prev.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
+  const toggleComplete = async (id: string) => {
+    const original = tasks;
+    const next = tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
+    setTasks(next);
+    try {
+      const updated = next.find(t => t.id === id);
+      await apiUpdateTask(id, { completed: updated?.completed });
+    } catch (e) {
+      setTasks(original);
+    }
   };
 
-  const createTask = (data: { title: string; description?: string; priority: Task["priority"]; deadline: string; label_ids: string[] }) => {
-    const newTask: Task = {
-      id: `t${Math.random().toString(36).slice(2, 9)}`,
-      user_id: "dev",
-      title: data.title,
-      description: data.description,
-      priority: data.priority,
-      deadline: data.deadline,
-      completed: false,
-      label_ids: data.label_ids,
-    };
-    setTasks(prev => [newTask, ...prev]);
-    setShowNewTask(false);
+  const createTask = async (data: { title: string; description?: string; priority: Task["priority"]; deadline: string; label_ids: string[] }) => {
+    try {
+      const created = await apiCreateTask(data);
+      setTasks(prev => [created, ...prev]);
+      setShowNewTask(false);
+    } catch (e: any) {
+      setError(e?.message || "Failed to create task");
+    }
   };
 
-  const currentEditTask = useMemo(() => tasks.find(t => t.id === editTaskId) ?? null, [tasks, editTaskId]);
+  const currentEditTask = useMemo(() => tasks.find(t => String(t.id) === String(editTaskId)) ?? null, [tasks, editTaskId]);
 
-  const saveTask = (id: string, data: { title: string; description?: string; priority: Task["priority"]; deadline: string; label_ids: string[] }) => {
+  const saveTask = async (id: string, data: { title: string; description?: string; priority: Task["priority"]; deadline: string; label_ids: string[] }) => {
+    const original = tasks;
     setTasks(prev => prev.map(t => t.id === id ? { ...t, ...data } : t));
     setEditTaskId(null);
+    try {
+      await apiUpdateTask(id, data);
+    } catch (e) {
+      setTasks(original);
+      setError("Failed to save changes");
+    }
   };
 
   const askDeleteTask = (id: string) => setDeleteTaskId(id);
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!deleteTaskId) return;
-    setTasks(prev => prev.filter(t => t.id !== deleteTaskId));
+    const id = deleteTaskId;
     setDeleteTaskId(null);
+    const original = tasks;
+    setTasks(prev => prev.filter(t => t.id !== id));
+    try {
+      await apiDeleteTask(id);
+    } catch (e) {
+      setTasks(original);
+      setError("Failed to delete task");
+    }
   };
 
-  // Labels CRUD (in-memory, case-insensitive uniqueness)
-  const createLabel = (name: string, color?: string) => {
-    const key = name.trim().toLowerCase();
-    if (!key) return;
-    if (labels.some(l => l.name_normalized === key)) return;
-    const id = `l${Math.random().toString(36).slice(2, 9)}`;
-    setLabels(prev => [...prev, { id, user_id: "dev", name, name_normalized: key, color }]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        setLoading(true);
+        const [tasksRes, labelsRes] = await Promise.all([
+          apiListTasks(),
+          apiListLabels(),
+        ]);
+        if (!active) return;
+        setTasks(tasksRes);
+        setLabels(labelsRes);
+      } catch (e: any) {
+        if (active) setError(e?.message || "Failed to load data");
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
+
+  // Labels CRUD (API with optimistic UI)
+  const createLabel = async (name: string, color?: string) => {
+    try {
+      const created = await apiCreateLabel(name, color);
+      setLabels(prev => [...prev, created]);
+    } catch (e: any) {
+      setError(e?.message || "Failed to create label");
+    }
   };
-  const renameLabel = (id: string, newName: string) => {
+  const renameLabel = async (id: string, newName: string) => {
+    const original = labels;
     const key = newName.trim().toLowerCase();
-    if (!key) return;
-    if (labels.some(l => l.id !== id && l.name_normalized === key)) return;
     setLabels(prev => prev.map(l => l.id === id ? { ...l, name: newName, name_normalized: key } : l));
+    try {
+      await apiUpdateLabel(id, { name: newName });
+    } catch (e) {
+      setLabels(original);
+      setError("Failed to rename label");
+    }
   };
-  const recolorLabel = (id: string, color: string) => {
+  const recolorLabel = async (id: string, color: string) => {
+    const original = labels;
     setLabels(prev => prev.map(l => l.id === id ? { ...l, color } : l));
+    try {
+      await apiUpdateLabel(id, { color });
+    } catch (e) {
+      setLabels(original);
+      setError("Failed to update label color");
+    }
   };
-  const deleteLabel = (id: string) => {
+  const deleteLabel = async (id: string) => {
+    const originalLabels = labels;
+    const originalTasks = tasks;
     setLabels(prev => prev.filter(l => l.id !== id));
     setTasks(prev => prev.map(t => ({ ...t, label_ids: t.label_ids.filter(lid => lid !== id) })));
+    try {
+      await apiDeleteLabel(id);
+    } catch (e) {
+      setLabels(originalLabels);
+      setTasks(originalTasks);
+      setError("Failed to delete label");
+    }
   };
 
   return (
@@ -147,13 +204,20 @@ export default function DashboardPage() {
               {showNewTask && (
                 <TaskForm labels={labels} onSubmit={createTask} onCancel={() => setShowNewTask(false)} />
               )}
+              {loading ? (
+                <div className="space-y-3">
+                  <SkeletonTaskRow />
+                  <SkeletonTaskRow />
+                  <SkeletonTaskRow />
+                </div>
+              ) : (
               <TaskList
                 tasks={filteredTasks}
                 labels={labels}
                 onToggleComplete={toggleComplete}
                 onEdit={(id) => setEditTaskId(id)}
-                onDelete={askDeleteTask}
-              />
+                onDelete={(id) => askDeleteTask(id)}
+              />)}
             </div>
           </div>
         </main>
