@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --peachy-50: #fef7ed;
+  --peachy-100: #fce4d2;
+  --peachy-200: #f9c5a0;
+  --peachy-300: #f5a06e;
+  --peachy-400: #f17a3f;
+  --peachy-500: #ed5a1a;
+  --peachy-600: #de4510;
+  --peachy-700: #b8350f;
+  --peachy-800: #932b14;
+  --peachy-900: #762614;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-peachy-50: var(--peachy-50);
+  --color-peachy-100: var(--peachy-100);
+  --color-peachy-200: var(--peachy-200);
+  --color-peachy-300: var(--peachy-300);
+  --color-peachy-400: var(--peachy-400);
+  --color-peachy-500: var(--peachy-500);
+  --color-peachy-600: var(--peachy-600);
+  --color-peachy-700: var(--peachy-700);
+  --color-peachy-800: var(--peachy-800);
+  --color-peachy-900: var(--peachy-900);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Peachy theme specific utilities 🐉 */
+.peachy-gradient-light {
+  background: linear-gradient(to bottom right, #fef7ed, #fce4d2, #f9c5a0);
+}
+
+.peachy-gradient-dark {
+  background: linear-gradient(to bottom right, #1c1917, #78350f, #1c1917);
+}

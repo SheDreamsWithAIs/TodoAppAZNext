@@ -7,6 +7,7 @@ venv/
 # Env & local
 .env
 .env.*
+.env.local
 !.env.example
 
 # OS/editor junk
@@ -16,3 +17,6 @@ Thumbs.db
 
 # Project files
 PROJECT_STATUS_FOR_AETHON.md
+
+# AI Guidance Documentation
+/AIDocs
