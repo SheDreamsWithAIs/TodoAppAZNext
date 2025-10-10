@@ -9,13 +9,16 @@ from datetime import date, datetime, timezone
 from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import init_beanie
 import os
+from dotenv import load_dotenv, find_dotenv
 
-# Force test environment 🐉
+# Force test environment 🐉 and load environment variables early
 os.environ["APP_ENV"] = "test"
+load_dotenv(find_dotenv())
 
 from app.main import app
 from app.models.task import Task
 from app.models.user import User
+from app.models.label import Label
 
 # Configure pytest-asyncio
 pytest_plugins = ('pytest_asyncio',)
@@ -44,7 +47,7 @@ async def init_test_db():
     database = client[TEST_DB_NAME]
     
     # Initialize Beanie with our document models
-    await init_beanie(database=database, document_models=[Task, User])
+    await init_beanie(database=database, document_models=[Task, User, Label])
     
     print(f"Test database initialized: {TEST_DB_NAME}")
     

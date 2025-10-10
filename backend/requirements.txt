@@ -9,6 +9,7 @@ beanie==1.26.0  # MongoDB ODM with Pydantic integration
 motor==3.3.2  # Async MongoDB driver
 passlib==1.7.4  # Password hashing
 bcrypt==4.0.1  # Bcrypt backend for passlib
+python-jose[cryptography]==3.3.0  # JWT token handling
 
 # Testing dependencies
 pytest==7.4.3
